@@ -480,7 +480,7 @@ def main():
             os.remove(img)
 
         bot = SLFBot()
-        for lang in ['EN']:
+        for lang in ['EN', 'FR', 'IT', 'DE']:
             langs[lang].install(unicode=True)
             try:
                 bot.send(lang, args.recipient, method=args.smtp_method)
