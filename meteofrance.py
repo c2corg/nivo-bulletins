@@ -488,7 +488,7 @@ def main():
             recipient = args.recipient or \
                 "%s@lists.camptocamp.org" % slf_langs[lang]
             try:
-                bot.send(lang, args.recipient, method=args.smtp_method)
+                bot.send(lang, recipient, method=args.smtp_method)
             except Exception:
                 logger.error("Unexpected error: %s" % sys.exc_info()[1])
 
