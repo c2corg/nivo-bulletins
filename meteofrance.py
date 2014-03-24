@@ -425,7 +425,7 @@ class SLFBot(Bot):
         ref = data_ref.get(lang)
 
         if ref and ref == data['content']:
-            self.log.info('%s nivo - No change, nothing to do', lang)
+            self.log.info('%s slf nivo - No change, nothing to do', lang)
         else:
             self.log.info('%s nivo - Sending mail', lang)
             title = _(u"Bulletin neige et avalanches - {lang}").format(lang=lang)
