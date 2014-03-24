@@ -418,7 +418,7 @@ class SLFBot(Bot):
             img_list.append(filename)
 
             resp = self.opener.open(url)
-            with open(filename, 'wb') as f:
+            with open(os.path.join(WORK_DIR, filename), 'wb') as f:
                 f.write(resp.read())
 
         data_ref = self.open_store()
@@ -476,19 +476,24 @@ def main():
     logger.addHandler(handler)
 
     if args.source in ('all', 'slf'):
-        for img in glob.glob('slf_*.png'):
+        for img in glob.glob(WORK_DIR + 'slf_*.png'):
+            os.remove(img)
+        for img in glob.glob(WORK_DIR + 'gk1_*.png'):
             os.remove(img)
 
         bot = SLFBot()
-        for lang in ['EN', 'FR', 'IT', 'DE']:
+        slf_langs = {'FR': 'avalanche', 'DE': 'lawinen', 'IT': 'valanghe', 'EN': 'avalanche.en'}
+        for lang in slf_langs:
             langs[lang].install(unicode=True)
+            recipient = args.recipient or \
+                "%s@lists.camptocamp.org" % slf_langs[lang]
             try:
                 bot.send(lang, args.recipient, method=args.smtp_method)
             except Exception:
                 logger.error("Unexpected error: %s" % sys.exc_info()[1])
 
     if args.source in ('all', 'meteofrance'):
-        for img in glob.glob('mf_OPP*.png'):
+        for img in glob.glob(WORK_DIR + 'mf_OPP*.png'):
             os.remove(img)
 
         for dept in DEPT_LIST:
@@ -497,7 +502,6 @@ def main():
 
             bot = MFBot(dept)
 
-            # 'nivo_text', -> deactivated until it replaces the images bulletin
             for bulletin_type in ('nivo_images', 'synth_text'):
                 func = getattr(bot, 'send_' + bulletin_type)
 
