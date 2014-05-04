@@ -316,24 +316,60 @@ if (!dpt) {
   phantom.exit(1);
 }
 
-function handle_dpt_pages(urls, urlClbk, finalClbk) {
-  var page, next, retrieve, output = "", toc = "";
+function handle_dpt_page(dpt, urlClbk, finalClbk) {
+  var page, output;
+
+  // retrieve dpt page and check if we have text bulletin (simple text for the departmenr)
+  // or full bulletin (one page for each range of the department)
+  page = webPage.create();
+  page.settings.userAgent = config.user_agent;
+
+  return page.open(config.base_url + dpt.url, function(status) {
+    if (status == "success") {
+      return window.setTimeout(function() {
+        info("Parsing " + (config.base_url + dpt.url));
+
+        output = page.evaluate(function() {
+          return $("#p_p_id_bulletinsNeigeAvalanche_WAR_mf3rpcportlet_ .mod-body:eq(1)").html();
+        });
+
+        if (output !== "") { // TODO To be checked once we have full bulletins again...
+          // text bulletin
+          info("Assuming simple text bulletin");
+          return finalClbk(output);
+
+        } else {
+          // full bulletin
+          info("Assuming full bulletin");
+          page.close();
+          handle_range_pages(dpt.mountain_ranges, urlClbk, finalClbk);
+        }
+      }, 2000);
+    } else {
+      console.log("An error occured when retrieving department page");
+      phantom.exit(1);
+    }
+  });
+}
+
+function handle_range_pages(range_urls, urlClbk, finalClbk) {
+  var page, next, retrieve_range, output = "", toc = "";
 
   next = function(status, url) {
     page.close();
     urlClbk(status, url);
-    return retrieve();
+    return retrieve_range();
   };
 
-  retrieve = function() {
-    if (urls.length > 0) {
-      var range = urls.shift();
+  retrieve_range = function() {
+    if (range_urls.length > 0) {
+      var range = range_urls.shift();
       page = webPage.create();
       page.settings.userAgent = config.user_agent;
 
       return page.open(config.base_url + range.url, function(status) {
         if (status === "success") {
-          return window.setTimeout((function() {
+          return window.setTimeout(function() {
             info("Parsing " + (config.base_url + range.url));
 
             try {
@@ -450,12 +486,12 @@ function handle_dpt_pages(urls, urlClbk, finalClbk) {
 
               return next(status, range.url);
             } catch (e) {
-              console.log("An error occured when handling a page");
+              console.log("An error occured when handling a range page");
               phantom.exit(1);
             }
-          }), 2000); // we need some time for the recent snow graph to appear
+          }, 2000); // we need some time for the recent snow graph to appear
         } else {
-          console.log("An error occured when retrieving a page");
+          console.log("An error occured when retrieving a range page");
           phantom.exit(1);
         }
       });
@@ -464,10 +500,10 @@ function handle_dpt_pages(urls, urlClbk, finalClbk) {
     }
   };
 
-  return retrieve();
+  return retrieve_range();
 }
 
-handle_dpt_pages(dpt.mountain_ranges, function(status, url) {
+handle_dpt_page(dpt, function(status, url) {
   if (status === "success") {
     return info("Correctly retrieved " + url);
   } else {

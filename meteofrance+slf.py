@@ -293,38 +293,6 @@ class MFBot(Bot):
             data_ref['images'][self.dept] = data['content']
             self.save_store(data_ref)
 
-    def send_nivo_text(self, recipient, method='smtp'):
-        """Send text bulletin when it replaces image bulletin."""
-
-        url = MF_REST_URL + "bulletins/lastest/fwfx5/AV" + self.dept
-        content = self.get_json(url)['corpsBulletin']
-
-        if re.match('.*Pas de bulletin disponible pour ce lieu.*', content):
-            self.log.info('%s nivo text - No bulletin', self.dept)
-            return
-
-        if len(content) < 300:
-            self.log.info('%s nivo text - Empty text', self.dept)
-            return
-
-        data_ref = self.open_store()
-        ref = data_ref['nivo'].get(self.dept)
-
-        if ref and ref == content:
-            self.log.info('%s nivo text - No change, nothing to do', self.dept)
-        else:
-            # text changed -> send the mail and store new text
-            html_content = content.replace('\n', '<br/>')
-
-            self.log.info('%s nivo text - Sending mail', self.dept)
-            mail = self.prepare_mail(
-                recipient, html_content, content,
-                title=u"{} - {}".format(TITLE_NIVO, self.dept))
-            mail.send(method=method)
-
-            data_ref['nivo'][self.dept] = content
-            self.save_store(data_ref)
-
     def send_synth_text(self, recipient, method='smtp'):
         """Send weekly synthesis."""
 
