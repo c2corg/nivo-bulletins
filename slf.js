@@ -121,7 +121,7 @@ function handle_bulletin(language) {
             if (!bcr) {
               info("Bulletin seems to be text only");
               output += page.evaluate(function() {
-                var html;
+                var html = "";
                 $('.summer-block').each(function() {
                   var div = $(this);
                   div.find('[class^="header-3"]').replaceWith(function() {
@@ -135,7 +135,7 @@ function handle_bulletin(language) {
                 return html;
               });
               page.close();
-              return handle_snowpack();
+              return finalize();
             }
 
             page.clipRect = {
