@@ -101,20 +101,43 @@ function handle_bulletin(language) {
             });
 
             // (flash) + edition time
-             output += page.evaluate(function() {
-               var div = $(".lawinenbulletin-header");
-               div.find("h2").replaceWith(function() {
-                 return "<div>" + this.innerHTML + "</div>";
-               });
-               div.find("a").remove(".infolink");
-               return div[0].outerHTML;
-             });
+            output += page.evaluate(function() {
+              var div = $(".lawinenbulletin-header");
+              div.find("h2").replaceWith(function() {
+                return "<div>" + this.innerHTML + "</div>";
+              });
+              div.find("a").remove(".infolink");
+              return div[0].outerHTML;
+            });
 
             // map
             var bcr = page.evaluate(function() {
               $(".mc-container").hide();
-              return $("#lwp-dynmap").css("backgroundColor", "white")[0].getBoundingClientRect();
+              var mapdiv = $("#lwp-dynmap").css("backgroundColor", "white");
+              return mapdiv.length ? mapdiv.get(0).getBoundingClientRect() : null;
             });
+
+            // if bcr is null, we have a text only bulletin, skip the following
+            if (!bcr) {
+              info("Bulletin seems to be text only");
+              output += page.evaluate(function() {
+                var html;
+                $('.summer-block').each(function() {
+                  var div = $(this);
+                  div.find('[class^="header-3"]').replaceWith(function() {
+                    return "<h2>" + this.innerHTML + "</h2>";
+                  });
+                  div.find('[class^="header-5"]').replaceWith(function() {
+                    return "<h3>" + this.innerHTML + "</h3>";
+                  });
+                  html += div.html();
+                });
+                return html;
+              });
+              page.close();
+              return handle_snowpack();
+            }
+
             page.clipRect = {
               top: bcr.top,
               left: bcr.left,
