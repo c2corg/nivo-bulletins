@@ -1,5 +1,5 @@
 /*
- * This script parses Meteofrance's snow bulletins and renders associated images
+ * This script parses Meteofrance's snow bulletins (text and standard versions) and renders associated images
  */
 
 var system = require("system"),
@@ -333,7 +333,7 @@ function handle_dpt_page(dpt, urlClbk, finalClbk) {
           return $("#p_p_id_bulletinsNeigeAvalanche_WAR_mf3rpcportlet_ .mod-body:eq(1)").html();
         });
 
-        if (output !== "") { // TODO To be checked once we have full bulletins again...
+        if (output !== "") {
           // text bulletin
           info("Assuming simple text bulletin");
           return finalClbk(output);
