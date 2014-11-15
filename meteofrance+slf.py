@@ -461,6 +461,8 @@ def main():
                 logger.error("Unexpected error: %s" % sys.exc_info()[1])
 
     if args.source in ('all', 'meteofrance'):
+        langs['FR'].install(unicode=True)
+
         for img in glob.glob(WORK_DIR + 'mf_OPP*.png'):
             os.remove(img)
 
