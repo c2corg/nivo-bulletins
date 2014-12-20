@@ -330,10 +330,10 @@ function handle_dpt_page(dpt, urlClbk, finalClbk) {
         info("Parsing " + (config.base_url + dpt.url));
 
         output = page.evaluate(function() {
-          return $("#p_p_id_bulletinsNeigeAvalancheDetail_WAR_mf3rpcportlet_ .mod-body:eq(1)").html();
+          return $("#p_p_id_bulletinsNeigeAvalanche_WAR_mf3rpcportlet_ .mod-body:eq(1)").html();
         });
 
-        if (output !== "") {
+        if (output !== null) {
           // text bulletin
           info("Assuming simple text bulletin");
           return finalClbk(output);
