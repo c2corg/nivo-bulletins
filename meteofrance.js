@@ -391,7 +391,7 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
               });
               page.clipRect = {
                 top: bcr.top,
-                left: bcr.left + 22,
+                left: bcr.left,
                 width: 200,
                 height: 80
               };
@@ -420,7 +420,7 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
               });
               page.clipRect = {
                 top: bcr.top,
-                left: bcr.left + 20,
+                left: bcr.left,
                 width: bcr.width,
                 height: bcr.height
               };
@@ -442,10 +442,10 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
                 return $(".article-row:eq(3) img")[0].getBoundingClientRect();
               });
               page.clipRect = {
-                top: bcr.top + 1,
-                left: bcr.left + 23,
-                width: bcr.width - 2,
-                height: bcr.height - 3
+                top: bcr.top,
+                left: bcr.left,
+                width: bcr.width,
+                height: bcr.height
               };
               page.render("mf_" + range.id + "_snow.png");
               info("Rendered image mf_" + range.id + "_snow.png");
