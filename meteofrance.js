@@ -439,7 +439,7 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
 
               // snow height figure
               bcr = page.evaluate(function() {
-                return $(".epaisseur-neige-main-box")[0].getBoundingClientRect();
+                return $(".article-row:eq(3) img")[0].getBoundingClientRect();
               });
               page.clipRect = {
                 top: bcr.top + 1,
