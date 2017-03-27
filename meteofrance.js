@@ -366,116 +366,136 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
       var range = range_urls.shift();
       page = webPage.create();
       page.settings.userAgent = config.user_agent;
+      page.onConsoleMessage = function(msg) {
+        info(msg);
+      }
+      var last = range_urls.length === 0;
 
       return page.open(config.base_url + range.url, function(status) {
         if (status === "success") {
           return window.setTimeout(function() {
-            info("Parsing " + (config.base_url + range.url));
+            var url = config.base_url + range.url;
+            info("Parsing " + url);
 
-            try {
-              toc += "<a href='#" + range.id + "'>" + range.name + "</a>&nbsp;&nbsp;&nbsp;";
-              output += page.evaluate(function(url) {
-                var section = $(".article-row:eq(0)");
-                // mountain range title
-                return "<hr />" +
-                       "<h3><a name='" + url.split("/").pop() + "' href='" + url + "'>" + $.trim(section.find("h3")[0].innerHTML) + "</a>" +
-                       "&nbsp;<a href='#toc'><small>Sommaire</small></a></h3>" +
-                // risk estimation
-                       "<h3>" + section.find("h4").text() + "</h3>" +
-                       section.find("p")[0].outerHTML;
-              }, config.base_url + range.url);
-
-              // risk cartouche
-              var bcr = page.evaluate(function() {
-                return $("#cartouche-risque")[0].getBoundingClientRect();
+            function mountain_range_title() {
+              return page.evaluate(function() {
+                var text = $.trim($("#BRA .BRAentete").find("h1")[1].innerHTML);
+                console.log("mountain range title: " + text);
+                return text;
               });
-              page.clipRect = {
-                top: bcr.top,
-                left: bcr.left,
-                width: 200,
-                height: 80
-              };
-              page.render("mf_" + range.id + "_risk_cartouche.png");
-              info("Rendered image mf_" + range.id + "_risk_cartouche.png");
-              output += "<div><img width='200' height='80' src='mf_" + range.id + "_risk_cartouche.png' /></div>";
+            }
 
-              // risk estimation & notation
-              output += page.evaluate(function() {
-                var section = $(".article-row:eq(0)");
-                return section.children("p:eq(1)")[0].outerHTML +
-                       section.find(".bloc-last .right-box").html();
+            function risk_estimation() {
+              return page.evaluate(function() {
+                var text = $.trim($("#BRA").find("p")[0].innerHTML);
+                console.log("risk estimation: " + text);
+                return text;
               });
+            }
 
-              // snow stability
-              output += page.evaluate(function() {
-                var section = $(".article-row:eq(1)");
-                return "<h3>" + section.find("h4").text() + "</h3>" +
-                       section.find("p")[0].outerHTML +
-                       $(".article-row:eq(2) h3")[0].outerHTML;
+            function risk_cartouche_content() {
+              return page.evaluate(function() {
+                var text = $.trim($("#BRA .cartouche").find("p")[0].outerHTML);
+                console.log("estimation cartouche: " + text);
+                return text;
               });
+            }
 
-              // recent snow
-              bcr = page.evaluate(function() {
-                return $("#epaisseur-container")[0].getBoundingClientRect();
+            function snow_stability_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA h2:eq(1)").text();
+                console.log(text);
+                return text;
               });
-              page.clipRect = {
-                top: bcr.top,
-                left: bcr.left,
-                width: bcr.width,
-                height: bcr.height
-              };
-              page.render("mf_" + range.id + "_chart.png");
-              info("Rendered image mf_" + range.id + "_chart.png");
-              output += "<div><img width='" + bcr.width + "' height='" + bcr.height +
-                        "' src='mf_" + range.id + "_chart.png' /></div>";
+            }
 
-              // snow quality
-              output += page.evaluate(function() {
-                var section = $(".article-row:eq(3) .bloc-content");
-                return section.find("h3")[0].outerHTML +
-                       section.find("p")[0].outerHTML +
-                       section.find("h3")[1].outerHTML;
+            function snow_stability_content() {
+              return page.evaluate(function() {
+                var text = $("#BRA pre")[0].outerHTML;
+                console.log("estimation cartouche: " + text);
+                return text;
               });
+            }
 
-              // snow height figure
-              bcr = page.evaluate(function() {
-                return $(".article-row:eq(3) img")[0].getBoundingClientRect();
+            function recent_snow_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA .row .col1 h2:eq(0)").text();
+                console.log(text);
+                return text;
               });
-              page.clipRect = {
-                top: bcr.top,
-                left: bcr.left,
-                width: bcr.width,
-                height: bcr.height
-              };
-              page.render("mf_" + range.id + "_snow.png");
-              info("Rendered image mf_" + range.id + "_snow.png");
-              output += "<div><img width='" + (bcr.width - 2) + "' height='" + (bcr.height - 3) +
-                        "' src='mf_" + range.id + "_snow.png' /></div>";
+            }
 
-              // TODO weather forecast?
+            function snow_quality_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA .row .col2 h2:eq(1)").text();
+                console.log(text);
+                return text;
+              });
+            }
 
-              // next risk
-              output += page.evaluate(function() {
-                var title = $(".article-row.last h4");
-                var content = "<h3>" + title.text() + "</h3>";
+            function snow_quality_content() {
+              return page.evaluate(function() {
+                var text = $("#BRA .row .col2 pre")[0].outerHTML;
+                console.log("snow quality: " + text);
+                return text;
+              });
+            }
 
-                var options = title.siblings(".option");
-                content += "<ul>";
-                for (var i=0; i<options.length; i++) {
-                  content += "<li>" + options[i].firstChild.nodeValue;
-                  switch (options.eq(i).find("span").text()) {
-                    case "low":
-                      content += " &#x2198;";
-                      break;
-                    case "medium":
-                      content += " &#x2192;";
-                      break;
-                    case "high":
-                      content += " &#x2197;";
-                      break;
+            function snow_height_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA .row .col1 h2:eq(1)").text();
+                console.log(text);
+                return text;
+              });
+            }
+
+            function next_risk_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA h2:eq(1)").text();
+                console.log(text);
+                return text;
+              });
+            }
+
+            function wheather_forecast_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA .row .col2 h2:eq(0)").text();
+                console.log(text);
+                return text;
+              });
+            }
+
+            function recent_wheather_title() {
+              return page.evaluate(function() {
+                var text = $("#BRA h2:eq(2)").text();
+                console.log(text);
+                return text;
+              });
+            }
+
+            function acknowledge() {
+              return page.evaluate(function() {
+                var text = $("p.basdepage").text();
+                console.log(text);
+                return text;
+              });
+            }
+
+            function next_risk_content() {
+              return page.evaluate(function() {
+                var options = $("ul.BRAtendance li");
+                var content = "<ul>";
+                for (var i = 0; i < options.length; i++) {
+                  content += "<li>" + options.eq(i).text();
+                  switch(options.eq(i).find("img").attr("alt")) {
+                    case "baisse":
+                      content += " &#x2198;"; break;
+                    case "stable":
+                      content += " &#x2192;"; break;
+                    case "hausse":
+                      content += " &#x2197;"; break;
                     default:
-                      content += " ?";
-                      break;
+                      content += " ?"; break;
                   }
                   content += "</li>";
                 }
@@ -483,10 +503,149 @@ function handle_range_pages(range_urls, urlClbk, finalClbk) {
 
                 return content;
               });
+            }
+
+            function risk_cartouche_image(range) {
+              var bcr = page.evaluate(function() {
+                return $("#BRA .figurineRisque")[0].getBoundingClientRect();
+              });
+
+              page.clipRect = {
+                top: bcr.top,
+                left: bcr.left + 125,
+                width: bcr.width,
+                height: bcr.height
+              };
+
+              page.render("mf_" + range.id + "_risk_cartouche.png");
+
+              info("Rendered image mf_" + range.id + "_risk_cartouche.png");
+
+              return "<div><img width='200' height='80' src='mf_" + range.id + "_risk_cartouche.png' /></div>"
+            }
+
+            function recent_snow_image(range) {
+              var bcr = page.evaluate(function() {
+                return $("#BRA .row .col1 img")[0].getBoundingClientRect();
+              });
+
+              page.clipRect = {
+                top: bcr.top,
+                left: bcr.left + 125,
+                width: bcr.width,
+                height: bcr.height
+              };
+
+              page.render("mf_" + range.id + "_recent_snow.png");
+
+              info("Rendered image mf_" + range.id + "_recent_snow.png");
+
+              return "<div><img width='" + bcr.width + "' height='" + bcr.height +
+                     "' src='mf_" + range.id + "_recent_snow.png' /></div>";
+            }
+
+            function snow_height_image(range) {
+              var bcr = page.evaluate(function() {
+                return $("#BRA .row .col1 img")[1].getBoundingClientRect();
+              });
+
+              page.clipRect = {
+                top: bcr.top,
+                left: bcr.left + 125,
+                width: bcr.width,
+                height: bcr.height
+              };
+
+              page.render("mf_" + range.id + "_snow.png");
+
+              info("Rendered image mf_" + range.id + "_snow.png");
+
+              return "<div><img width='" + (bcr.width - 2) + "' height='" + (bcr.height - 3) +
+                     "' src='mf_" + range.id + "_snow.png' /></div>";
+            }
+
+            function wheather_forecast_image() {
+              var bcr = page.evaluate(function() {
+                return $("table.tableauMeteo")[0].getBoundingClientRect();
+              });
+
+              page.clipRect = {
+                top: bcr.top,
+                left: bcr.left + 125,
+                width: bcr.width,
+                height: bcr.height
+              };
+
+              page.render("mf_" + range.id + "_forecast.png");
+
+              info("Rendered image mf_" + range.id + "_forecast.png");
+
+              return "<div><img width='" + bcr.width + "' height='" + bcr.height +
+                     "' src='mf_" + range.id + "_forecast.png' /></div>";
+            }
+
+            function recent_wheather_image() {
+              var bcr = page.evaluate(function() {
+                return $("#BSH_graph")[0].getBoundingClientRect();
+              });
+
+              page.clipRect = {
+                top: bcr.top,
+                left: bcr.left + 125,
+                width: bcr.width,
+                height: bcr.height
+              };
+
+              page.render("mf_" + range.id + "_wheather.png");
+
+              info("Rendered image mf_" + range.id + "_wheather.png");
+
+              return "<div><img width='" + bcr.width + "' height='" + bcr.height +
+                     "' src='mf_" + range.id + "_wheather.png' /></div>";
+            }
+
+            try {
+              toc += "<a href='#" + range.id + "'>" + range.name + "</a>&nbsp;&nbsp;&nbsp;";
+
+              // risk evaluation
+              output += // title
+                        "<hr />" +
+                        "<h3><a name='" + url.split("/").pop() + "' href='" + url + "'>" + mountain_range_title() + "</a>" +
+                        "&nbsp;<a href='#toc'><small>Sommaire</small></a></h3>" +
+                        // risk
+                        "<h3>" + risk_estimation() + "</h3>" +
+                        risk_cartouche_content() +
+                        risk_cartouche_image(range) +
+                        // snow stability
+                        "<h3>" + snow_stability_title() + "</h3>" +
+                        snow_stability_content() +
+                        // recent snow
+                        "<h3>" + recent_snow_title() + "</h3>" +
+                        recent_snow_image(range) +
+                        // wheather_forecast
+                        "<h3>" + wheather_forecast_title() + "</h3>" +
+                        wheather_forecast_image(range) +
+                        // snow quality
+                        "<h3>" +snow_quality_title() + "</h3>" +
+                        snow_quality_content() +
+                        // snow height
+                        "<h3>" + snow_height_title() + "</h3>" +
+                        snow_height_image(range) +
+                        // next risk
+                        "<h3>" + next_risk_title() + "</h3>" +
+                        next_risk_content() +
+                        // recent wheather
+                        "<h3>" + recent_wheather_title() + "</h3>" +
+                        recent_wheather_image(range);
+
+              if (last) {
+                output += "<hr /><i>" + acknowledge() + "</i>";
+              }
 
               return next(status, range.url);
             } catch (e) {
               console.log("An error occured when handling a range page");
+              console.log(e);
               phantom.exit(1);
             }
           }, 2000); // we need some time for the recent snow graph to appear
